@@ -12,57 +12,7 @@ export async function getLedgers() {
     include: { group: true },
     orderBy: { name: "asc" },
   });
-  // #region agent log
-  if (ledgers[0]) {
-    fetch("http://127.0.0.1:7425/ingest/6043b083-ac5a-4add-b841-3273d5cc4860", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "32c864",
-      },
-      body: JSON.stringify({
-        sessionId: "32c864",
-        runId: "pre-fix",
-        hypothesisId: "H1",
-        location: "ledger.ts:getLedgers",
-        message: "openingBalance type from Prisma",
-        data: {
-          ledgerName: ledgers[0].name,
-          openingBalanceType: typeof ledgers[0].openingBalance,
-          openingBalanceCtor:
-            ledgers[0].openingBalance?.constructor?.name ?? "none",
-          isDecimal: ledgers[0].openingBalance?.constructor?.name === "Decimal",
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-  }
-  // #endregion
-  const serialized = ledgers.map(serializeLedgerForClient);
-  // #region agent log
-  if (serialized[0]) {
-    fetch("http://127.0.0.1:7425/ingest/6043b083-ac5a-4add-b841-3273d5cc4860", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "32c864",
-      },
-      body: JSON.stringify({
-        sessionId: "32c864",
-        runId: "post-fix",
-        hypothesisId: "H1",
-        location: "ledger.ts:getLedgers:serialized",
-        message: "serialized openingBalance for client",
-        data: {
-          openingBalanceType: typeof serialized[0].openingBalance,
-          openingBalanceValue: serialized[0].openingBalance,
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-  }
-  // #endregion
-  return serialized;
+  return ledgers.map(serializeLedgerForClient);
 }
 
 export async function getLedgerGroups() {
