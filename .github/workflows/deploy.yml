@@ -28,9 +28,14 @@ jobs:
         run: npm ci
 
       - name: Sync database schema
-        run: npx prisma db push
+        run: |
+          if [ -n "${PROD_DATABASE_URL}" ]; then
+            DATABASE_URL="${PROD_DATABASE_URL}" npx prisma db push
+          else
+            echo "DATABASE_URL secret not set — skipping schema sync"
+          fi
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          PROD_DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
