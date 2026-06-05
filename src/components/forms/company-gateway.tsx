@@ -16,9 +16,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import type { Company } from "@prisma/client";
+import type { SerializedCompany } from "@/lib/serialize";
 
-export function CompanyGateway({ companies }: { companies: Company[] }) {
+export function CompanyGateway({ companies }: { companies: SerializedCompany[] }) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);

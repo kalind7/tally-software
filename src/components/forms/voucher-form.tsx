@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import type { Ledger, LedgerGroup, VoucherType } from "@prisma/client";
+import type { LedgerGroup, VoucherType } from "@prisma/client";
+import type { SerializedLedgerWithGroup } from "@/lib/serialize";
 
 type LineState = {
   ledgerId: string;
@@ -43,7 +44,7 @@ export function VoucherForm({
   ledgers: initialLedgers,
   groups,
 }: {
-  ledgers: (Ledger & { group: LedgerGroup })[];
+  ledgers: SerializedLedgerWithGroup[];
   groups: LedgerGroup[];
 }) {
   const [ledgers, setLedgers] = useState(initialLedgers);

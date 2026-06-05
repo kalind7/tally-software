@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { COMPANY_COOKIE } from "@/lib/company-cookie";
 import { db } from "@/lib/db";
 import { seedLedgerGroupsForCompany } from "@/lib/groups";
+import { serializeCompanyForClient } from "@/lib/serialize";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -12,9 +13,10 @@ export async function getCompanies() {
   const session = await auth();
   if (!session?.user) return [];
 
-  return db.company.findMany({
+  const companies = await db.company.findMany({
     orderBy: { name: "asc" },
   });
+  return companies.map(serializeCompanyForClient);
 }
 
 export async function createCompany(formData: FormData) {
