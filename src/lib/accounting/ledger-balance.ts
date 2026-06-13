@@ -35,8 +35,10 @@ export function sumMovements(
   return { drTotal, crTotal };
 }
 
-export function formatAmount(value: number) {
-  return new Intl.NumberFormat("en-IN", {
+export function formatAmount(value: number, currency = "NPR") {
+  return new Intl.NumberFormat("en-NP", {
+    style: "currency",
+    currency,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(value);

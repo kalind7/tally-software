@@ -61,7 +61,7 @@ export default async function BillsPage({
               bills.map((bill) => (
                 <TableRow key={bill.id}>
                   <TableCell>
-                    {new Date(bill.billDate).toLocaleDateString("en-IN")}
+                    {new Date(bill.billDate).toLocaleDateString("en-NP")}
                   </TableCell>
                   <TableCell className="font-medium">{bill.billNo}</TableCell>
                   <TableCell>{bill.ledger.name}</TableCell>
@@ -70,7 +70,7 @@ export default async function BillsPage({
                   </TableCell>
                   <TableCell>
                     {bill.dueDate
-                      ? new Date(bill.dueDate).toLocaleDateString("en-IN")
+                      ? new Date(bill.dueDate).toLocaleDateString("en-NP")
                       : "—"}
                   </TableCell>
                   <TableCell>

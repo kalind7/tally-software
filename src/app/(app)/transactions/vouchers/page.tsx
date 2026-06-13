@@ -56,7 +56,7 @@ export default async function VouchersPage() {
                 return (
                   <TableRow key={v.id}>
                     <TableCell>
-                      {new Date(v.date).toLocaleDateString("en-IN")}
+                      {new Date(v.date).toLocaleDateString("en-NP")}
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary">{v.type}</Badge>

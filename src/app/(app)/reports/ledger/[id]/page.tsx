@@ -81,7 +81,7 @@ export default async function LedgerStatementPage({
               return (
                 <TableRow key={line.id}>
                   <TableCell>
-                    {new Date(line.voucher.date).toLocaleDateString("en-IN")}
+                    {new Date(line.voucher.date).toLocaleDateString("en-NP")}
                   </TableCell>
                   <TableCell>
                     <Link

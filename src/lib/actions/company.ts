@@ -30,24 +30,27 @@ export async function createCompany(formData: FormData) {
   const mailingName = (formData.get("mailingName") as string)?.trim();
   const fyStartMonth = Number(formData.get("fyStartMonth") || 4);
   const booksBeginDate = formData.get("booksBeginDate") as string;
-  const currency = (formData.get("currency") as string)?.trim() || "INR";
+  const currency = (formData.get("currency") as string)?.trim() || "NPR";
 
   if (!name || !booksBeginDate) {
     return { error: "Company name and books begin date are required." };
   }
 
-  const company = await db.company.create({
-    data: {
-      name,
-      mailingName: mailingName || name,
-      address: address || null,
-      fyStartMonth,
-      booksBeginDate: new Date(booksBeginDate),
-      currency,
-    },
-  });
+  const company = await db.$transaction(async (tx) => {
+    const created = await tx.company.create({
+      data: {
+        name,
+        mailingName: mailingName || name,
+        address: address || null,
+        fyStartMonth,
+        booksBeginDate: new Date(booksBeginDate),
+        currency,
+      },
+    });
 
-  await seedLedgerGroupsForCompany(company.id);
+    await seedLedgerGroupsForCompany(created.id, tx);
+    return created;
+  });
 
   revalidatePath("/companies");
   return { success: true, companyId: company.id };

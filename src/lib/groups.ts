@@ -1,4 +1,4 @@
-import type { GroupNature } from "@prisma/client";
+import type { GroupNature, Prisma } from "@prisma/client";
 
 export type DefaultGroup = {
   name: string;
@@ -25,10 +25,13 @@ export const DEFAULT_LEDGER_GROUPS: DefaultGroup[] = [
   { name: "Indirect Incomes", nature: "Income", isPrimary: true },
 ];
 
-export async function seedLedgerGroupsForCompany(companyId: string) {
+export async function seedLedgerGroupsForCompany(
+  companyId: string,
+  client?: Prisma.TransactionClient
+) {
   const { db } = await import("@/lib/db");
-
-  await db.ledgerGroup.createMany({
+  const database = client ?? db;
+  await database.ledgerGroup.createMany({
     data: DEFAULT_LEDGER_GROUPS.map((group) => ({
       companyId,
       name: group.name,
@@ -37,25 +40,4 @@ export async function seedLedgerGroupsForCompany(companyId: string) {
     })),
     skipDuplicates: true,
   });
-
-  const cashGroup = await db.ledgerGroup.findFirst({
-    where: { companyId, name: "Cash-in-Hand" },
-  });
-
-  if (cashGroup) {
-    const existingCash = await db.ledger.findFirst({
-      where: { companyId, name: "Cash" },
-    });
-    if (!existingCash) {
-      await db.ledger.create({
-        data: {
-          companyId,
-          groupId: cashGroup.id,
-          name: "Cash",
-          openingBalance: 0,
-          openingType: "Dr",
-        },
-      });
-    }
-  }
 }
