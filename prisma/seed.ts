@@ -6,19 +6,34 @@ const prisma = createPrismaClient();
 
 async function main() {
   const email = "admin@tallyco.local";
-  const existing = await prisma.user.findUnique({ where: { email } });
-  if (!existing) {
+  let admin = await prisma.user.findUnique({ where: { email } });
+  if (!admin) {
     const passwordHash = await bcrypt.hash("admin123", 10);
-    await prisma.user.create({
+    admin = await prisma.user.create({
       data: {
         email,
         name: "Admin",
         passwordHash,
+        role: "ADMIN",
       },
     });
-    console.log("Created demo user: admin@tallyco.local / admin123");
+    console.log("Created admin user: admin@tallyco.local / admin123");
+  } else if (admin.role !== "ADMIN") {
+    admin = await prisma.user.update({
+      where: { email },
+      data: { role: "ADMIN" },
+    });
+    console.log("Updated existing user to ADMIN role.");
   } else {
-    console.log("Demo user already exists.");
+    console.log("Admin user already exists.");
+  }
+
+  const orphaned = await prisma.company.updateMany({
+    where: { ownerId: null },
+    data: { ownerId: admin.id },
+  });
+  if (orphaned.count > 0) {
+    console.log(`Assigned ${orphaned.count} legacy company(ies) to admin.`);
   }
 }
 

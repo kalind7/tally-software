@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth";
+import { userCanAccessCompany } from "@/lib/access";
 import { COMPANY_COOKIE } from "@/lib/company-cookie";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -26,5 +27,16 @@ export async function requireCompany() {
   if (!companyId) {
     redirect("/companies");
   }
+
+  const allowed = await userCanAccessCompany(
+    session.user.id,
+    session.user.role,
+    companyId
+  );
+
+  if (!allowed) {
+    redirect("/api/company/reset");
+  }
+
   return { session, companyId };
 }

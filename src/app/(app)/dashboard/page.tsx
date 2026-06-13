@@ -1,79 +1,88 @@
 import Link from "next/link";
 import { requireCompany } from "@/lib/session";
 import { db } from "@/lib/db";
+import { PageHeader } from "@/components/layout/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Receipt, Scale, TrendingUp } from "lucide-react";
+import { PlusCircle, Receipt, Scale, TrendingUp } from "lucide-react";
 
 export default async function DashboardPage() {
   const { companyId } = await requireCompany();
   const company = await db.company.findUniqueOrThrow({ where: { id: companyId } });
 
-  const [ledgerCount, voucherCount, billCount] = await Promise.all([
+  const [ledgerCount, voucherCount] = await Promise.all([
     db.ledger.count({ where: { companyId } }),
     db.voucher.count({ where: { companyId } }),
-    db.billReference.count({ where: { companyId } }),
   ]);
-
-  const quickLinks = [
-    { href: "/masters/ledgers", label: "Create Ledger", icon: BookOpen },
-    { href: "/transactions/vouchers/new", label: "New Voucher", icon: Receipt },
-    { href: "/reports/trial-balance", label: "Trial Balance", icon: Scale },
-    { href: "/reports/profit-loss", label: "Profit & Loss", icon: TrendingUp },
-  ];
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">{company.name}</h1>
-        <p className="text-muted-foreground">Accounting dashboard</p>
+      <PageHeader
+        title={company.name}
+        description="Start with voucher entry — reports update automatically after each save."
+        actions={
+          <Button asChild>
+            <Link href="/transactions/vouchers/new">
+              <PlusCircle className="size-4" />
+              New Voucher
+            </Link>
+          </Button>
+        }
+      />
+
+      <Card className="border-primary/25 bg-primary/5 shadow-sm transition-shadow hover:shadow-md">
+        <CardHeader>
+          <CardTitle>Begin here</CardTitle>
+        </CardHeader>
+        <CardContent className="text-sm text-muted-foreground">
+          Record Sales, Purchase, Receipt, Payment, or Journal vouchers. Starter
+          ledgers (Cash, Bank, VAT, Sales, Purchase) are ready — or press Alt+C
+          during entry to create more.
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Card className="shadow-sm transition-shadow hover:shadow-md">
+          <CardHeader>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Vouchers posted
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-semibold tabular-nums">{voucherCount}</p>
+          </CardContent>
+        </Card>
+        <Card className="shadow-sm transition-shadow hover:shadow-md">
+          <CardHeader>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Ledgers in use
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-semibold tabular-nums">{ledgerCount}</p>
+          </CardContent>
+        </Card>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Ledgers
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-semibold">{ledgerCount}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Vouchers
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-semibold">{voucherCount}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Bills
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-semibold">{billCount}</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {quickLinks.map((link) => {
-          const Icon = link.icon;
-          return (
-            <Button key={link.href} variant="outline" className="h-auto py-4" asChild>
-              <Link href={link.href} className="flex flex-col items-center gap-2">
-                <Icon className="size-5" />
-                {link.label}
-              </Link>
-            </Button>
-          );
-        })}
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Button variant="outline" className="h-auto py-4" asChild>
+          <Link href="/transactions/vouchers" className="flex flex-col items-center gap-2">
+            <Receipt className="size-5" />
+            Voucher List
+          </Link>
+        </Button>
+        <Button variant="outline" className="h-auto py-4" asChild>
+          <Link href="/reports/trial-balance" className="flex flex-col items-center gap-2">
+            <Scale className="size-5" />
+            Trial Balance
+          </Link>
+        </Button>
+        <Button variant="outline" className="h-auto py-4" asChild>
+          <Link href="/reports/profit-loss" className="flex flex-col items-center gap-2">
+            <TrendingUp className="size-5" />
+            Profit &amp; Loss
+          </Link>
+        </Button>
       </div>
     </div>
   );

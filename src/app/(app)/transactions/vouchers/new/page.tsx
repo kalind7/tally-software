@@ -1,5 +1,6 @@
 import { getLedgerGroups, getLedgers } from "@/lib/actions/ledger";
 import { requireCompany } from "@/lib/session";
+import { PageHeader } from "@/components/layout/page-header";
 import { VoucherForm } from "@/components/forms/voucher-form";
 
 export default async function NewVoucherPage() {
@@ -8,12 +9,10 @@ export default async function NewVoucherPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Voucher Entry</h1>
-        <p className="text-muted-foreground">
-          Record debit and credit entries. Totals must balance before saving.
-        </p>
-      </div>
+      <PageHeader
+        title="Voucher Entry"
+        description="Main entry point — pick a voucher type, select ledgers (or Alt+C to create instantly), balance Dr and Cr, then save. Trial Balance and P&L update automatically."
+      />
       <VoucherForm ledgers={ledgers} groups={groups} />
     </div>
   );

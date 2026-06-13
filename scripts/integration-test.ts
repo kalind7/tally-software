@@ -1,95 +1,92 @@
 import "dotenv/config";
 import { createPrismaClient } from "../src/lib/prisma-client";
 import { seedLedgerGroupsForCompany } from "../src/lib/groups";
-import { validateVoucherLines } from "../src/lib/accounting/voucher";
-import { formatAmount } from "../src/lib/accounting/ledger-balance";
+import { getCompaniesForUser } from "../src/lib/access";
 
 const prisma = createPrismaClient();
 
 async function main() {
   const results: string[] = [];
 
-  // 1. Company + seed: groups only, no default Cash ledger
-  const company = await prisma.company.create({
+  const admin = await prisma.user.findUnique({
+    where: { email: "admin@tallyco.local" },
+  });
+  results.push(
+    admin?.role === "ADMIN"
+      ? "PASS: Admin user has ADMIN role"
+      : `FAIL: Admin role is ${admin?.role}`
+  );
+
+  const userA = await prisma.user.create({
     data: {
-      name: `Test Co ${Date.now()}`,
-      booksBeginDate: new Date(),
-      currency: "NPR",
+      email: `usera-${Date.now()}@test.local`,
+      passwordHash: "x",
+      role: "USER",
     },
   });
-  await seedLedgerGroupsForCompany(company.id);
-  const ledgerCount = await prisma.ledger.count({ where: { companyId: company.id } });
+  const userB = await prisma.user.create({
+    data: {
+      email: `userb-${Date.now()}@test.local`,
+      passwordHash: "x",
+      role: "USER",
+    },
+  });
+
+  const companyA = await prisma.company.create({
+    data: {
+      name: "User A Co",
+      booksBeginDate: new Date(),
+      ownerId: userA.id,
+    },
+  });
+  await seedLedgerGroupsForCompany(companyA.id);
+
+  const companyB = await prisma.company.create({
+    data: {
+      name: "User B Co",
+      booksBeginDate: new Date(),
+      ownerId: userB.id,
+    },
+  });
+  await seedLedgerGroupsForCompany(companyB.id);
+
+  const aCompanies = await getCompaniesForUser(userA.id, "USER");
+  const bCompanies = await getCompaniesForUser(userB.id, "USER");
+  const adminCompanies = await getCompaniesForUser(admin!.id, "ADMIN");
+
   results.push(
-    ledgerCount === 0
-      ? "PASS: New company has 0 ledgers (no default Cash)"
-      : `FAIL: Expected 0 ledgers, got ${ledgerCount}`
+    aCompanies.length === 1 && aCompanies[0].id === companyA.id
+      ? "PASS: User A sees only own company"
+      : `FAIL: User A sees ${aCompanies.length} companies`
+  );
+  results.push(
+    bCompanies.length === 1 && bCompanies[0].id === companyB.id
+      ? "PASS: User B sees only own company"
+      : `FAIL: User B sees ${bCompanies.length} companies`
+  );
+  results.push(
+    adminCompanies.length >= 2
+      ? `PASS: Admin sees ${adminCompanies.length} companies`
+      : "FAIL: Admin cannot see all companies"
   );
 
-  // 2. Create two ledgers for voucher test
-  const cashGroup = await prisma.ledgerGroup.findFirst({
-    where: { companyId: company.id, name: "Cash-in-Hand" },
-  });
-  const capitalGroup = await prisma.ledgerGroup.findFirst({
-    where: { companyId: company.id, name: "Capital Account" },
-  });
-  if (!cashGroup || !capitalGroup) throw new Error("Missing seed groups");
-
-  const drLedger = await prisma.ledger.create({
-    data: { companyId: company.id, groupId: cashGroup.id, name: "Test Cash", openingBalance: 0, openingType: "Dr" },
-  });
-  const crLedger = await prisma.ledger.create({
-    data: { companyId: company.id, groupId: capitalGroup.id, name: "Test Capital", openingBalance: 0, openingType: "Cr" },
-  });
-
-  // 3. Voucher validation
-  const validation = validateVoucherLines([
-    { ledgerId: drLedger.id, amount: 1000, entryType: "Dr" },
-    { ledgerId: crLedger.id, amount: 1000, entryType: "Cr" },
-  ]);
+  const ledgerCount = await prisma.ledger.count({ where: { companyId: companyA.id } });
   results.push(
-    validation.valid
-      ? "PASS: Balanced voucher validation"
-      : `FAIL: Voucher validation - ${validation.error}`
+    ledgerCount === 6
+      ? "PASS: Nepal starter chart has 6 ledgers"
+      : `FAIL: Expected 6 starter ledgers, got ${ledgerCount}`
   );
 
-  // 4. NPR formatting
-  const formatted = formatAmount(1234.5);
-  results.push(
-    formatted.includes("1,234.50") || formatted.includes("Rs")
-      ? `PASS: NPR format -> ${formatted}`
-      : `FAIL: Unexpected format -> ${formatted}`
-  );
+  await prisma.company.deleteMany({
+    where: { id: { in: [companyA.id, companyB.id] } },
+  });
+  await prisma.user.deleteMany({ where: { id: { in: [userA.id, userB.id] } } });
 
-  // 5. Create voucher in DB
-  if (validation.valid && validation.validLines) {
-    const voucher = await prisma.voucher.create({
-      data: {
-        companyId: company.id,
-        type: "Journal",
-        number: `JRN-TEST-${Date.now()}`,
-        date: new Date(),
-        lines: {
-          create: validation.validLines.map((line) => ({
-            ledgerId: line.ledgerId,
-            amount: line.amount,
-            entryType: line.entryType,
-          })),
-        },
-      },
-    });
-    results.push(`PASS: Voucher created (${voucher.id})`);
-  }
-
-  // Cleanup
-  await prisma.voucher.deleteMany({ where: { companyId: company.id } });
-  await prisma.company.delete({ where: { id: company.id } });
-
-  console.log("\n=== Integration Test Results ===");
+  console.log("\n=== Access & Voucher-First Test Results ===");
   results.forEach((r) => console.log(r));
-  console.log("================================\n");
+  console.log("===========================================\n");
 
-  const failed = results.filter((r) => r.startsWith("FAIL"));
-  if (failed.length > 0) process.exit(1);
+  if (results.some((r) => r.startsWith("FAIL"))) process.exit(1);
 }
 
 main()

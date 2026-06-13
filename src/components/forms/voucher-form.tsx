@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { getTemplateForType } from "@/lib/accounting/voucher-templates";
 import type { LedgerGroup, VoucherType } from "@prisma/client";
 import type { SerializedLedgerWithGroup } from "@/lib/serialize";
 
@@ -52,7 +53,7 @@ export function VoucherForm({
 }) {
   const router = useRouter();
   const [ledgers, setLedgers] = useState(initialLedgers);
-  const [type, setType] = useState<VoucherType>("Journal");
+  const [type, setType] = useState<VoucherType>("Sales");
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [number, setNumber] = useState("");
   const [narration, setNarration] = useState("");
@@ -164,8 +165,23 @@ export function VoucherForm({
     }
   }
 
+  const template = getTemplateForType(type);
+
   return (
     <div className="space-y-6">
+      {template && (
+        <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm">
+          <p className="font-medium">{template.title}</p>
+          <p className="mt-1 text-muted-foreground">{template.description}</p>
+          <ul className="mt-2 list-inside list-disc text-muted-foreground">
+            {template.lines.map((line) => (
+              <li key={line.role}>
+                {line.entryType}: {line.role} ({line.ledgerHint})
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <div className="flex justify-end">
         <LedgerForm
           groups={groups}

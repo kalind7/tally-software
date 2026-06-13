@@ -1,6 +1,7 @@
 "use server";
 
 import { auth } from "@/lib/auth";
+import { getCompaniesForUser, requireCompanyAccess } from "@/lib/access";
 import { COMPANY_COOKIE } from "@/lib/company-cookie";
 import { db } from "@/lib/db";
 import { seedLedgerGroupsForCompany } from "@/lib/groups";
@@ -13,9 +14,10 @@ export async function getCompanies() {
   const session = await auth();
   if (!session?.user) return [];
 
-  const companies = await db.company.findMany({
-    orderBy: { name: "asc" },
-  });
+  const companies = await getCompaniesForUser(
+    session.user.id,
+    session.user.role
+  );
   return companies.map(serializeCompanyForClient);
 }
 
@@ -45,6 +47,7 @@ export async function createCompany(formData: FormData) {
         fyStartMonth,
         booksBeginDate: new Date(booksBeginDate),
         currency,
+        ownerId: session.user.id,
       },
     });
 
@@ -61,6 +64,8 @@ export async function selectCompanyAction(companyId: string) {
   if (!session?.user) {
     throw new Error("Not authenticated.");
   }
+
+  await requireCompanyAccess(session.user.id, session.user.role, companyId);
 
   const company = await db.company.findUnique({ where: { id: companyId } });
   if (!company) {

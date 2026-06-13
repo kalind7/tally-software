@@ -120,6 +120,8 @@ export async function createVoucher(data: {
   revalidatePath("/transactions/bills");
   revalidatePath("/reports/trial-balance");
   revalidatePath("/reports/profit-loss");
+  revalidatePath("/masters/ledgers");
+  revalidatePath("/masters/groups");
 
   return { success: true, voucherId: voucher.id };
 }

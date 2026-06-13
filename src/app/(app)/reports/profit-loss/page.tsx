@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getProfitLossReport } from "@/lib/actions/reports";
 import { requireCompany } from "@/lib/session";
 import { formatAmount } from "@/lib/accounting/ledger-balance";
+import { PageHeader } from "@/components/layout/page-header";
 import { ReportDateFilter } from "@/components/forms/report-date-filter";
 import { PrintButton } from "@/components/reports/print-button";
 import {
@@ -37,15 +38,11 @@ export default async function ProfitLossPage({
 
   return (
     <div className="space-y-6" id="report-content">
-      <div className="flex items-center justify-between print:hidden">
-        <div>
-          <h1 className="text-2xl font-semibold">Profit &amp; Loss Account</h1>
-          <p className="text-muted-foreground">
-            Income and expenses for the selected period.
-          </p>
-        </div>
-        <PrintButton />
-      </div>
+      <PageHeader
+        title="Profit & Loss Account"
+        description="Income and expenses for the selected period."
+        actions={<PrintButton />}
+      />
 
       <div className="print:hidden">
         <ReportDateFilter

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getVouchers } from "@/lib/actions/voucher";
 import { requireCompany } from "@/lib/session";
+import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -18,17 +19,15 @@ export default async function VouchersPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Vouchers</h1>
-          <p className="text-muted-foreground">
-            Double-entry voucher register, sorted by date (newest first).
-          </p>
-        </div>
-        <Button asChild>
-          <Link href="/transactions/vouchers/new">New Voucher</Link>
-        </Button>
-      </div>
+      <PageHeader
+        title="Vouchers"
+        description="Double-entry voucher register, sorted by date (newest first)."
+        actions={
+          <Button asChild>
+            <Link href="/transactions/vouchers/new">New Voucher</Link>
+          </Button>
+        }
+      />
 
       <div className="rounded-xl border">
         <Table>

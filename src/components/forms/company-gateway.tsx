@@ -19,7 +19,13 @@ import {
 } from "@/components/ui/dialog";
 import type { SerializedCompany } from "@/lib/serialize";
 
-export function CompanyGateway({ companies }: { companies: SerializedCompany[] }) {
+export function CompanyGateway({
+  companies,
+  isAdmin = false,
+}: {
+  companies: SerializedCompany[];
+  isAdmin?: boolean;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -182,6 +188,11 @@ export function CompanyGateway({ companies }: { companies: SerializedCompany[] }
                   {" · "}
                   {company.currency}
                 </p>
+                {isAdmin && company.owner && (
+                  <p className="text-xs text-muted-foreground">
+                    Owner: {company.owner.name || company.owner.email}
+                  </p>
+                )}
                 <form action={selectCompanyAction.bind(null, company.id)}>
                   <Button type="submit" className="w-full">
                     Select &amp; Work

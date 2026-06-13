@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import type { UserRole } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { authConfig } from "@/lib/auth.config";
@@ -41,6 +42,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           id: user.id,
           email: user.email,
           name: user.name,
+          role: user.role,
           companyId: user.companyId,
         };
       },
@@ -48,9 +50,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     ...authConfig.callbacks,
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.role = user.role;
+        token.companyId = user.companyId ?? null;
+      } else if (token.id) {
+        const { db } = await import("@/lib/db");
+        const dbUser = await db.user.findUnique({
+          where: { id: token.id as string },
+          select: { role: true, companyId: true },
+        });
+        if (dbUser) {
+          token.role = dbUser.role;
+          token.companyId = dbUser.companyId;
+        }
+      }
+      return token;
+    },
     async session({ session, token }) {
-      if (session.user) {
+      if (session.user && token.id) {
         session.user.id = token.id as string;
+        session.user.role = (token.role as UserRole) ?? "USER";
         session.user.companyId = token.companyId as string | null | undefined;
       }
       const companyCookie = (await cookies()).get(COMPANY_COOKIE)?.value;
