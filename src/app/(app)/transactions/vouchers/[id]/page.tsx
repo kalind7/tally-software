@@ -33,7 +33,7 @@ export default async function VoucherDetailPage({
         <div>
           <h1 className="text-2xl font-semibold">{voucher.number}</h1>
           <p className="text-muted-foreground">
-            {voucher.type} · {new Date(voucher.date).toLocaleDateString("en-IN")}
+            {voucher.type} · {new Date(voucher.date).toLocaleDateString("en-NP")}
           </p>
         </div>
         <Button variant="outline" asChild>
@@ -69,7 +69,7 @@ export default async function VoucherDetailPage({
                   {line.billRef ? (
                     <span className="text-sm">
                       {line.billRef.billNo} ·{" "}
-                      {new Date(line.billRef.billDate).toLocaleDateString("en-IN")}
+                      {new Date(line.billRef.billDate).toLocaleDateString("en-NP")}
                     </span>
                   ) : (
                     "—"

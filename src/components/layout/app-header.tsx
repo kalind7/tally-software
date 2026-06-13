@@ -1,8 +1,12 @@
 import Link from "next/link";
 import { auth, signOut } from "@/lib/auth";
+import { isAdmin } from "@/lib/access";
 import { db } from "@/lib/db";
+import { getFyLabel } from "@/lib/fy";
 import { getActiveCompanyId } from "@/lib/session";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PlusCircle } from "lucide-react";
 
 export async function AppHeader() {
   const session = await auth();
@@ -11,19 +15,38 @@ export async function AppHeader() {
     ? await db.company.findUnique({ where: { id: companyId } })
     : null;
 
+  const fyLabel = company
+    ? getFyLabel(new Date(), company.fyStartMonth)
+    : null;
+
   return (
-    <header className="flex h-14 items-center justify-between border-b bg-background px-4">
+    <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="flex items-center gap-3">
-        <span className="text-sm text-muted-foreground">Company:</span>
         <Link
           href="/companies"
-          className="font-medium hover:underline"
+          className="font-medium transition-colors hover:text-primary"
         >
           {company?.name ?? "Select company"}
         </Link>
+        {fyLabel && (
+          <Badge variant="secondary" className="font-normal">
+            {fyLabel}
+          </Badge>
+        )}
+        {session?.user && isAdmin(session.user.role) && (
+          <Badge variant="outline" className="text-xs">
+            Admin
+          </Badge>
+        )}
       </div>
-      <div className="flex items-center gap-3">
-        <span className="text-sm text-muted-foreground">
+      <div className="flex items-center gap-2">
+        <Button asChild size="sm">
+          <Link href="/transactions/vouchers/new">
+            <PlusCircle className="size-4" />
+            New Voucher
+          </Link>
+        </Button>
+        <span className="hidden text-sm text-muted-foreground sm:inline">
           {session?.user?.email}
         </span>
         <form

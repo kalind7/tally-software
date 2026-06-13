@@ -1,20 +1,24 @@
 import { getCompanies } from "@/lib/actions/company";
 import { requireAuth } from "@/lib/session";
+import { isAdmin } from "@/lib/access";
+import { PageHeader } from "@/components/layout/page-header";
 import { CompanyGateway } from "@/components/forms/company-gateway";
 
 export default async function CompaniesPage() {
-  await requireAuth();
+  const session = await requireAuth();
   const companies = await getCompanies();
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Company Gateway</h1>
-        <p className="text-muted-foreground">
-          Select a company to work with or create a new one.
-        </p>
-      </div>
-      <CompanyGateway companies={companies} />
+      <PageHeader
+        title="Company Gateway"
+        description={
+          isAdmin(session.user.role)
+            ? "Admin view — all companies. Select one to work or create a new company."
+            : "Select your company or create a new one."
+        }
+      />
+      <CompanyGateway companies={companies} isAdmin={isAdmin(session.user.role)} />
     </div>
   );
 }

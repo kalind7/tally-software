@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createLedger } from "@/lib/actions/ledger";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,48 +21,98 @@ export function LedgerForm({
   groups,
   trigger,
   onSuccess,
+  reloadOnSuccess = true,
 }: {
   groups: LedgerGroup[];
   trigger?: React.ReactNode;
-  onSuccess?: () => void;
+  onSuccess?: (ledgerId: string) => void | Promise<void>;
+  reloadOnSuccess?: boolean;
 }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [name, setName] = useState("");
+  const [groupId, setGroupId] = useState("");
+  const [openingBalance, setOpeningBalance] = useState("0");
+  const [openingType, setOpeningType] = useState<"Dr" | "Cr">("Dr");
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  function resetFields() {
+    setName("");
+    setGroupId("");
+    setOpeningBalance("0");
+    setOpeningType("Dr");
+    setError(null);
+  }
+
+  async function handleSave() {
     setLoading(true);
     setError(null);
-    const result = await createLedger(new FormData(e.currentTarget));
-    if (result?.error) {
-      setError(result.error);
+
+    const formData = new FormData();
+    formData.set("name", name);
+    formData.set("groupId", groupId);
+    formData.set("openingBalance", openingBalance);
+    formData.set("openingType", openingType);
+
+    try {
+      const result = await createLedger(formData);
+      if (result?.error) {
+        setError(result.error);
+        setLoading(false);
+        return;
+      }
+
+      setOpen(false);
+      resetFields();
       setLoading(false);
-      return;
+
+      if (result.ledgerId) {
+        await onSuccess?.(result.ledgerId);
+      }
+
+      if (reloadOnSuccess) {
+        router.refresh();
+      }
+    } catch {
+      setError("Something went wrong. Please try again.");
+      setLoading(false);
     }
-    setOpen(false);
-    setLoading(false);
-    onSuccess?.();
-    window.location.reload();
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) resetFields();
+      }}
+    >
       <DialogTrigger asChild>
-        {trigger ?? <Button>Create Ledger</Button>}
+        {trigger ?? <Button type="button">Create Ledger</Button>}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create Ledger</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="ledger-name">Ledger Name *</Label>
-            <Input id="ledger-name" name="name" required />
+            <Input
+              id="ledger-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="groupId">Under Group *</Label>
-            <Select id="groupId" name="groupId" required defaultValue="">
+            <Select
+              id="groupId"
+              value={groupId}
+              onChange={(e) => setGroupId(e.target.value)}
+              required
+            >
               <option value="" disabled>
                 Select group
               </option>
@@ -77,16 +128,20 @@ export function LedgerForm({
               <Label htmlFor="openingBalance">Opening Balance</Label>
               <Input
                 id="openingBalance"
-                name="openingBalance"
                 type="number"
                 step="0.01"
                 min="0"
-                defaultValue="0"
+                value={openingBalance}
+                onChange={(e) => setOpeningBalance(e.target.value)}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="openingType">Balance Type</Label>
-              <Select id="openingType" name="openingType" defaultValue="Dr">
+              <Select
+                id="openingType"
+                value={openingType}
+                onChange={(e) => setOpeningType(e.target.value as "Dr" | "Cr")}
+              >
                 <option value="Dr">Debit (Dr)</option>
                 <option value="Cr">Credit (Cr)</option>
               </Select>
@@ -94,11 +149,11 @@ export function LedgerForm({
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <DialogFooter>
-            <Button type="submit" disabled={loading}>
+            <Button type="button" onClick={handleSave} disabled={loading || !name || !groupId}>
               {loading ? "Saving..." : "Save Ledger"}
             </Button>
           </DialogFooter>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   );

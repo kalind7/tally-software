@@ -52,7 +52,7 @@ export default async function DayBookPage({
                 <TableRow key={`${v.id}-${line.id}`}>
                   <TableCell>
                     {idx === 0
-                      ? new Date(v.date).toLocaleDateString("en-IN")
+                      ? new Date(v.date).toLocaleDateString("en-NP")
                       : ""}
                   </TableCell>
                   <TableCell>

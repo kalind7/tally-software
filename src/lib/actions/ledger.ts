@@ -1,18 +1,43 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { getSignedBalance, sumMovements } from "@/lib/accounting/ledger-balance";
 import { serializeLedgerForClient } from "@/lib/serialize";
 import { requireCompany } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 
-export async function getLedgers() {
+export type LedgerWithBalance = ReturnType<typeof serializeLedgerForClient> & {
+  currentDr: number;
+  currentCr: number;
+  hasVoucherActivity: boolean;
+};
+
+export async function getLedgers(): Promise<LedgerWithBalance[]> {
   const { companyId } = await requireCompany();
   const ledgers = await db.ledger.findMany({
     where: { companyId },
-    include: { group: true },
+    include: {
+      group: true,
+      voucherLines: { include: { voucher: true } },
+    },
     orderBy: { name: "asc" },
   });
-  return ledgers.map(serializeLedgerForClient);
+
+  return ledgers.map((ledger) => {
+    const { drTotal, crTotal } = sumMovements(ledger.voucherLines);
+    const { dr, cr } = getSignedBalance({
+      openingBalance: Number(ledger.openingBalance),
+      openingType: ledger.openingType,
+      drTotal,
+      crTotal,
+    });
+    return {
+      ...serializeLedgerForClient(ledger),
+      currentDr: dr,
+      currentCr: cr,
+      hasVoucherActivity: ledger.voucherLines.length > 0,
+    };
+  });
 }
 
 export async function getLedgerGroups() {

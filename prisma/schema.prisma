@@ -38,15 +38,22 @@ enum BillRefType {
   OnAccount
 }
 
+enum UserRole {
+  ADMIN
+  USER
+}
+
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  name         String?
-  companyId    String?
-  company      Company? @relation(fields: [companyId], references: [id])
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id              String    @id @default(cuid())
+  email           String    @unique
+  passwordHash    String
+  name            String?
+  role            UserRole  @default(USER)
+  companyId       String?
+  company         Company?  @relation("ActiveCompany", fields: [companyId], references: [id])
+  ownedCompanies  Company[] @relation("CompanyOwner")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }
 
 model Company {
@@ -56,10 +63,12 @@ model Company {
   address        String?
   fyStartMonth   Int           @default(4)
   booksBeginDate DateTime
-  currency       String        @default("INR")
+  currency       String        @default("NPR")
+  ownerId        String?
+  owner          User?         @relation("CompanyOwner", fields: [ownerId], references: [id])
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
-  users          User[]
+  users          User[]        @relation("ActiveCompany")
   ledgerGroups   LedgerGroup[]
   ledgers        Ledger[]
   vouchers       Voucher[]

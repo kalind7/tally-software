@@ -20,6 +20,7 @@ export type SerializedCompany = Omit<
   booksBeginDate: string;
   createdAt: string;
   updatedAt: string;
+  owner?: { id: string; name: string | null; email: string } | null;
 };
 
 export function serializeLedgerForClient(
@@ -38,7 +39,9 @@ export function serializeLedgerForClient(
   };
 }
 
-export function serializeCompanyForClient(company: Company): SerializedCompany {
+export function serializeCompanyForClient(
+  company: Company & { owner?: { id: string; name: string | null; email: string } | null }
+): SerializedCompany {
   return {
     ...company,
     booksBeginDate: company.booksBeginDate.toISOString(),
