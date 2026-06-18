@@ -6,7 +6,7 @@
 
 The project lives inside the **VK_project** workspace at `tallyco/`. It is in early development (single git commit, functional core features, incomplete local setup documentation until now).
 
-**Repository:** `https://github.com/vikrantpaudel76-lgtm/tallyco.git`
+**Repository:** `https://github.com/kalind7/tally-software.git`
 
 ---
 
@@ -58,7 +58,9 @@ tallyco/
 ├── prisma/
 │   ├── schema.prisma
 │   └── seed.ts
-├── docker-compose.yml      # PostgreSQL 16 only
+├── docker-compose.yml      # PostgreSQL 17 only (local dev)
+├── docker-compose.prod.yml # Production Next.js app (VPS)
+├── Dockerfile
 └── package.json
 ```
 
@@ -213,22 +215,34 @@ All accounting calculations are pure TypeScript in `src/lib/accounting/` — no 
 |----------|----------|-------------|
 | `DATABASE_URL` | Yes | PostgreSQL connection string |
 | `AUTH_SECRET` | Yes | NextAuth JWT signing secret |
+| `AUTH_URL` | Yes (prod) | Public app URL, e.g. `https://tallyco.kalindkoirala.com.np` (no trailing slash) |
+| `AUTH_TRUST_HOST` | Yes (prod) | Set `true` when behind nginx reverse proxy |
+| `NODE_ENV` | Prod | `production` on VPS |
+| `PORT` | Prod Docker | Host port for the app (default `3010` in `docker-compose.prod.yml`) |
 
 Example (see `.env.example`):
 
 ```bash
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/tallyco"
 AUTH_SECRET="your-random-secret-here"
+AUTH_URL="http://localhost:3000"
+AUTH_TRUST_HOST="true"
 ```
 
-### Docker (`docker-compose.yml`)
+### Docker
 
-PostgreSQL 16 Alpine on port `5432`:
+**Local dev** (`docker-compose.yml`) — PostgreSQL 17 Alpine on port `5432`:
 
 - User: `postgres`
 - Password: `postgres`
 - Database: `tallyco`
 - Volume: `tallyco_pgdata`
+
+**Production** (`docker-compose.prod.yml` + `Dockerfile`) — Next.js app only on the VPS:
+
+- `network_mode: host`, `PORT=3010`, nginx proxies the subdomain to `127.0.0.1:3010`
+- Database: native PostgreSQL on the host (`tallyco_app` user, `127.0.0.1:5432`)
+- See [DEPLOY.md](./DEPLOY.md) for full setup, password rotation, and DB access
 
 ### NPM Scripts
 
@@ -265,35 +279,28 @@ PostgreSQL 16 Alpine on port `5432`:
 
 ### Prerequisites
 
-- Node.js 18+ (recommended: 20+)
-- Docker (for PostgreSQL)
+- Node.js 22 (matches CI and production Docker image)
+- Docker (PostgreSQL for local dev; full app image for production)
 - npm
 
-### Steps
+### Local development
 
 ```bash
-# 1. Enter project directory
-cd tallyco
-
-# 2. Install dependencies
-npm install
-
-# 3. Configure environment
 cp .env.example .env
-# Edit .env and set AUTH_SECRET (generate with: openssl rand -base64 32)
+# Edit .env — set AUTH_SECRET (openssl rand -base64 32)
 
-# 4. Start PostgreSQL
 docker compose up -d
-
-# 5. Apply database schema and seed demo user
+npm install
 npm run db:push
 npm run db:seed
-
-# 6. Start development server
 npm run dev
 ```
 
 Open `http://localhost:3000` in your browser.
+
+### Production (VPS)
+
+Docker app + native PostgreSQL + nginx. Full step-by-step guide: [DEPLOY.md](./DEPLOY.md).
 
 ### First-time Usage
 
