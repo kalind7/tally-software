@@ -1,19 +1,23 @@
-name: Deploy to Vercel
+name: Deploy
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
-env:
-  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+concurrency:
+  group: production-deploy
+  cancel-in-progress: true
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: production
     env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/tallyco
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+      AUTH_URL: ${{ vars.AUTH_URL }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,31 +32,23 @@ jobs:
         run: npm ci
 
       - name: Sync database schema
+        run: npx prisma db push
+
+      - name: Build application
+        run: npm run build
+
+      - name: Trigger Render deploy
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
         run: |
-          if [ -n "${PROD_DATABASE_URL}" ]; then
-            DATABASE_URL="${PROD_DATABASE_URL}" npx prisma db push
-          else
-            echo "DATABASE_URL secret not set — skipping schema sync"
+          if [ -z "$RENDER_DEPLOY_HOOK_URL" ]; then
+            echo "::error::RENDER_DEPLOY_HOOK_URL secret is not set. See DEPLOY.md."
+            exit 1
           fi
-        env:
-          PROD_DATABASE_URL: ${{ secrets.DATABASE_URL }}
-
-      - name: Install Vercel CLI
-        run: npm install -g vercel@latest
-
-      - name: Pull Vercel environment
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Build project
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
-
-      - name: Deploy to production
-        id: production
-        run: |
-          DEPLOY_URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
-          echo "url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
-          echo "## Deployment URL" >> "$GITHUB_STEP_SUMMARY"
-          echo "$DEPLOY_URL" >> "$GITHUB_STEP_SUMMARY"
+          curl -fsS -X POST "$RENDER_DEPLOY_HOOK_URL"
+          echo "## Deploy triggered" >> "$GITHUB_STEP_SUMMARY"
+          if [ -n "${{ vars.RENDER_SERVICE_URL }}" ]; then
+            echo "Live URL: ${{ vars.RENDER_SERVICE_URL }}" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Set repository variable RENDER_SERVICE_URL to show the live link here." >> "$GITHUB_STEP_SUMMARY"
+          fi
