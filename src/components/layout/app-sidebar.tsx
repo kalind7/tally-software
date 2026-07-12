@@ -13,6 +13,7 @@ import {
   Receipt,
   Scale,
   TrendingUp,
+  Wallet,
 } from "lucide-react";
 
 const navSections = [
@@ -28,6 +29,7 @@ const navSections = [
     items: [
       { href: "/reports/trial-balance", label: "Trial Balance", icon: Scale },
       { href: "/reports/profit-loss", label: "Profit & Loss", icon: TrendingUp },
+      { href: "/reports/balance-sheet", label: "Balance Sheet", icon: Wallet },
     ],
   },
   {

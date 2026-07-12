@@ -93,6 +93,7 @@ tallyco/
 | Transactions | `/transactions/bills` | Bill-wise references index |
 | Reports | `/reports/trial-balance` | Trial balance as of date |
 | Reports | `/reports/profit-loss` | P&L for date range |
+| Reports | `/reports/balance-sheet` | Balance sheet as of date |
 | Reports | `/reports/ledger/[id]` | Ledger statement |
 
 ### Server Actions (`src/lib/actions/`)
@@ -102,9 +103,9 @@ tallyco/
 | `auth.ts` | Login, register, sign out |
 | `company.ts` | List/create companies, select active company (cookie) |
 | `ledger.ts` | Create and list ledgers |
-| `voucher.ts` | Create, list, and fetch vouchers |
-| `bill.ts` | Bill reference listing |
-| `reports.ts` | Trial balance, P&L, ledger statement data |
+| `voucher.ts` | Create, update, delete, list, and fetch vouchers |
+| `bill.ts` | Bill index, open bills, outstanding amounts |
+| `reports.ts` | Trial balance, P&L, balance sheet, ledger statement |
 
 ### Voucher Types
 
@@ -264,10 +265,8 @@ AUTH_TRUST_HOST="true"
 
 | Issue | Severity | Notes |
 |-------|----------|-------|
-| No Prisma migrations | Medium | Schema applied via `db:push`; no `prisma/migrations/` history |
-| Boilerplate README | Low | Default create-next-app README; use this file for project docs |
-| Unused dependencies | Low | `@tanstack/react-query`, `recharts`, `@react-pdf/renderer` not imported |
-| No tests | Medium | No test runner or test files configured |
+| No Prisma migrations | Low | Initial migration added; use `db:migrate` for schema changes |
+| No tests | Low | Vitest unit tests for accounting libs; integration script for DB |
 | Company not scoped per user | Medium | `getCompanies()` returns all companies, not user-specific |
 | `.tools/node/` committed | Low | ~100MB Windows Node bundle; not useful on macOS/Linux |
 | NextAuth v5 beta | Low | On beta release; monitor for stable release |

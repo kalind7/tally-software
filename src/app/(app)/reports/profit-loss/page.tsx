@@ -5,6 +5,8 @@ import { formatAmount } from "@/lib/accounting/ledger-balance";
 import { PageHeader } from "@/components/layout/page-header";
 import { ReportDateFilter } from "@/components/forms/report-date-filter";
 import { PrintButton } from "@/components/reports/print-button";
+import { StatCard } from "@/components/ui/stat-card";
+import { AmountCell } from "@/components/ui/amount-cell";
 import {
   Table,
   TableBody,
@@ -55,6 +57,18 @@ export default async function ProfitLossPage({
         />
       </div>
 
+      <div className="grid gap-4 sm:grid-cols-3">
+        <StatCard label="Total Income" value={formatAmount(report.totalIncome)} />
+        <StatCard label="Total Expenses" value={formatAmount(report.totalExpenses)} />
+        <StatCard
+          label={report.netProfit >= 0 ? "Net Profit" : "Net Loss"}
+          value={formatAmount(Math.abs(report.netProfit))}
+          valueClassName={
+            report.netProfit >= 0 ? "text-success" : "text-destructive"
+          }
+        />
+      </div>
+
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-xl border">
           <h2 className="border-b px-4 py-3 font-semibold">Income</h2>
@@ -77,14 +91,14 @@ export default async function ProfitLossPage({
                     </Link>
                   </TableCell>
                   <TableCell className="text-right">
-                    {formatAmount(row.amount)}
+                    <AmountCell value={row.amount} />
                   </TableCell>
                 </TableRow>
               ))}
               <TableRow className="font-semibold">
                 <TableCell>Total Income</TableCell>
                 <TableCell className="text-right">
-                  {formatAmount(report.totalIncome)}
+                  <AmountCell value={report.totalIncome} />
                 </TableCell>
               </TableRow>
             </TableBody>
@@ -112,31 +126,19 @@ export default async function ProfitLossPage({
                     </Link>
                   </TableCell>
                   <TableCell className="text-right">
-                    {formatAmount(row.amount)}
+                    <AmountCell value={row.amount} />
                   </TableCell>
                 </TableRow>
               ))}
               <TableRow className="font-semibold">
                 <TableCell>Total Expenses</TableCell>
                 <TableCell className="text-right">
-                  {formatAmount(report.totalExpenses)}
+                  <AmountCell value={report.totalExpenses} />
                 </TableCell>
               </TableRow>
             </TableBody>
           </Table>
         </div>
-      </div>
-
-      <div className="rounded-xl border p-4 text-center">
-        <p className="text-sm text-muted-foreground">Net Result</p>
-        <p
-          className={`text-2xl font-semibold ${
-            report.netProfit >= 0 ? "text-green-600" : "text-destructive"
-          }`}
-        >
-          {report.netProfit >= 0 ? "Net Profit" : "Net Loss"}:{" "}
-          {formatAmount(Math.abs(report.netProfit))}
-        </p>
       </div>
     </div>
   );

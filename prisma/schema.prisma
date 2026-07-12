@@ -137,20 +137,23 @@ model VoucherLine {
 }
 
 model BillReference {
-  id            String       @id @default(cuid())
+  id            String          @id @default(cuid())
   companyId     String
-  company       Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  company       Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
   ledgerId      String
-  ledger        Ledger       @relation(fields: [ledgerId], references: [id])
-  voucherLineId String?      @unique
-  voucherLine   VoucherLine? @relation(fields: [voucherLineId], references: [id], onDelete: SetNull)
+  ledger        Ledger          @relation(fields: [ledgerId], references: [id])
+  voucherLineId String?         @unique
+  voucherLine   VoucherLine?    @relation(fields: [voucherLineId], references: [id], onDelete: SetNull)
+  againstBillId String?
+  againstBill   BillReference?  @relation("BillSettlement", fields: [againstBillId], references: [id])
+  settlements   BillReference[] @relation("BillSettlement")
   billNo        String
   billDate      DateTime
   dueDate       DateTime?
-  amount        Decimal      @db.Decimal(18, 2)
-  refType       BillRefType  @default(New)
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  amount        Decimal         @db.Decimal(18, 2)
+  refType       BillRefType     @default(New)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 
   @@index([companyId, billDate])
   @@index([companyId, ledgerId])

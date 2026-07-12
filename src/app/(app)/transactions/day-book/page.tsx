@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { getDayBook } from "@/lib/actions/voucher";
 import { requireCompany } from "@/lib/session";
+import { PageHeader } from "@/components/layout/page-header";
 import { SortToggle } from "@/components/forms/sort-toggle";
+import { AmountCell } from "@/components/ui/amount-cell";
+import { VoucherTypeBadge } from "@/components/ui/voucher-type-badge";
 import {
   Table,
   TableBody,
@@ -10,7 +13,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 
 export default async function DayBookPage({
   searchParams,
@@ -24,15 +26,13 @@ export default async function DayBookPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold">Day Book</h1>
-          <p className="text-muted-foreground">
-            All vouchers sorted by date — toggle sort order as needed.
-          </p>
-        </div>
-        <SortToggle current={sortOrder} basePath="/transactions/day-book" />
-      </div>
+      <PageHeader
+        title="Day Book"
+        description="All vouchers sorted by date — grouped by voucher."
+        actions={
+          <SortToggle current={sortOrder} basePath="/transactions/day-book" />
+        }
+      />
 
       <div className="rounded-xl border">
         <Table>
@@ -49,7 +49,10 @@ export default async function DayBookPage({
           <TableBody>
             {vouchers.flatMap((v) =>
               v.lines.map((line, idx) => (
-                <TableRow key={`${v.id}-${line.id}`}>
+                <TableRow
+                  key={`${v.id}-${line.id}`}
+                  className={idx === 0 ? "bg-muted/30" : undefined}
+                >
                   <TableCell>
                     {idx === 0
                       ? new Date(v.date).toLocaleDateString("en-NP")
@@ -59,7 +62,7 @@ export default async function DayBookPage({
                     {idx === 0 ? (
                       <Link
                         href={`/transactions/vouchers/${v.id}`}
-                        className="hover:underline"
+                        className="font-medium hover:underline"
                       >
                         {v.number}
                       </Link>
@@ -68,22 +71,22 @@ export default async function DayBookPage({
                     )}
                   </TableCell>
                   <TableCell>
-                    {idx === 0 ? (
-                      <Badge variant="secondary">{v.type}</Badge>
+                    {idx === 0 ? <VoucherTypeBadge type={v.type} /> : ""}
+                  </TableCell>
+                  <TableCell>{line.ledger.name}</TableCell>
+                  <TableCell className="text-right">
+                    {line.entryType === "Dr" ? (
+                      <AmountCell value={Number(line.amount)} />
                     ) : (
                       ""
                     )}
                   </TableCell>
-                  <TableCell>{line.ledger.name}</TableCell>
                   <TableCell className="text-right">
-                    {line.entryType === "Dr"
-                      ? Number(line.amount).toFixed(2)
-                      : ""}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {line.entryType === "Cr"
-                      ? Number(line.amount).toFixed(2)
-                      : ""}
+                    {line.entryType === "Cr" ? (
+                      <AmountCell value={Number(line.amount)} />
+                    ) : (
+                      ""
+                    )}
                   </TableCell>
                 </TableRow>
               ))

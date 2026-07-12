@@ -8,6 +8,7 @@ export type VoucherLineInput = {
   billDate?: string;
   dueDate?: string;
   refType?: "New" | "Against" | "OnAccount";
+  againstBillId?: string;
 };
 
 export function validateVoucherLines(lines: VoucherLineInput[]) {

@@ -1,4 +1,7 @@
 import type { GroupNature, Prisma } from "@prisma/client";
+import { NEPAL_STARTER_LEDGERS } from "@/lib/starter-ledgers";
+
+export { NEPAL_STARTER_LEDGERS };
 
 export type DefaultGroup = {
   name: string;
@@ -6,7 +9,6 @@ export type DefaultGroup = {
   isPrimary: boolean;
 };
 
-/** Nepal IRD-friendly chart of account groups (Tally Prime style) */
 export const DEFAULT_LEDGER_GROUPS: DefaultGroup[] = [
   { name: "Capital Account", nature: "Liability", isPrimary: true },
   { name: "Current Assets", nature: "Asset", isPrimary: true },
@@ -22,20 +24,6 @@ export const DEFAULT_LEDGER_GROUPS: DefaultGroup[] = [
   { name: "Indirect Expenses", nature: "Expense", isPrimary: true },
   { name: "Direct Incomes", nature: "Income", isPrimary: true },
   { name: "Indirect Incomes", nature: "Income", isPrimary: true },
-];
-
-/** Pre-seeded ledgers so beginners can post vouchers immediately */
-export const NEPAL_STARTER_LEDGERS: {
-  name: string;
-  groupName: string;
-  openingType: "Dr" | "Cr";
-}[] = [
-  { name: "Cash", groupName: "Cash-in-Hand", openingType: "Dr" },
-  { name: "Bank", groupName: "Bank Accounts", openingType: "Dr" },
-  { name: "VAT Payable", groupName: "Current Liabilities", openingType: "Cr" },
-  { name: "VAT Recoverable", groupName: "Current Assets", openingType: "Dr" },
-  { name: "Sales", groupName: "Sales Accounts", openingType: "Cr" },
-  { name: "Purchase", groupName: "Purchase Accounts", openingType: "Dr" },
 ];
 
 export async function seedLedgerGroupsForCompany(
