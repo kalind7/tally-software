@@ -41,9 +41,6 @@ export default function LoginPage() {
             Voucher-first bookkeeping for small businesses — inspired by TallyPrime.
           </p>
         </div>
-        <p className="text-sm text-primary-foreground/70">
-          Demo: admin@tallyco.local / admin123
-        </p>
       </div>
 
       <div className="flex flex-1 items-center justify-center p-6">

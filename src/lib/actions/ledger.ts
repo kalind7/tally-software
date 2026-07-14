@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { getSignedBalance, sumMovements } from "@/lib/accounting/ledger-balance";
-import { serializeLedgerForClient } from "@/lib/serialize";
+import { serializeLedgerForClient, serializeLedgerGroupForClient } from "@/lib/serialize";
 import { requireCompany } from "@/lib/session";
 import { revalidatePath } from "next/cache";
 
@@ -42,10 +42,11 @@ export async function getLedgers(): Promise<LedgerWithBalance[]> {
 
 export async function getLedgerGroups() {
   const { companyId } = await requireCompany();
-  return db.ledgerGroup.findMany({
+  const groups = await db.ledgerGroup.findMany({
     where: { companyId },
     orderBy: { name: "asc" },
   });
+  return groups.map(serializeLedgerGroupForClient);
 }
 
 export async function createLedger(formData: FormData) {

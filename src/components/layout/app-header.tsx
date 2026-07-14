@@ -6,7 +6,7 @@ import { getFyLabel } from "@/lib/fy";
 import { getActiveCompanyId } from "@/lib/session";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { ChevronDown, PlusCircle } from "lucide-react";
 
 export async function AppHeader() {
   const session = await auth();
@@ -22,12 +22,12 @@ export async function AppHeader() {
   return (
     <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="flex items-center gap-3">
-        <Link
-          href="/companies"
-          className="font-medium transition-colors hover:text-primary"
-        >
-          {company?.name ?? "Select company"}
-        </Link>
+        <Button variant="outline" size="sm" asChild className="h-8 gap-1.5 font-medium shadow-sm">
+          <Link href="/companies" title="Switch company">
+            {company?.name ?? "Select company"}
+            <ChevronDown className="size-3.5 opacity-60" />
+          </Link>
+        </Button>
         {fyLabel && (
           <Badge variant="secondary" className="font-normal">
             {fyLabel}

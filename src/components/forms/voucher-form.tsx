@@ -22,8 +22,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { getTemplateForType } from "@/lib/accounting/voucher-templates";
 import { buildVatLines, splitVatFromTaxable } from "@/lib/accounting/vat";
 import { NEPAL_STARTER_LEDGERS } from "@/lib/starter-ledgers";
-import type { BillRefType, LedgerGroup, VoucherType } from "@prisma/client";
-import type { SerializedLedgerWithGroup } from "@/lib/serialize";
+import type { SerializedLedgerGroup } from "@/lib/serialize";
+import type { BillRefType, VoucherType } from "@prisma/client";
 
 type LineState = {
   ledgerId: string;
@@ -46,7 +46,7 @@ type OpenBill = {
 
 type VoucherFormProps = {
   ledgers: SerializedLedgerWithGroup[];
-  groups: LedgerGroup[];
+  groups: SerializedLedgerGroup[];
   mode?: "create" | "edit";
   voucherId?: string;
   initial?: {

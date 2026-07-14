@@ -2,14 +2,12 @@ import Link from "next/link";
 import { getVouchers } from "@/lib/actions/voucher";
 import { requireCompany } from "@/lib/session";
 import { PageHeader } from "@/components/layout/page-header";
-import { AmountCell } from "@/components/ui/amount-cell";
 import { EmptyState } from "@/components/ui/empty-state";
-import { VoucherTypeBadge } from "@/components/ui/voucher-type-badge";
+import { VoucherTableRow } from "@/components/transactions/voucher-table-row";
 import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
@@ -93,30 +91,15 @@ export default async function VouchersPage({
                   .filter((l) => l.entryType === "Dr")
                   .reduce((s, l) => s + Number(l.amount), 0);
                 return (
-                  <TableRow key={v.id} className="cursor-pointer hover:bg-muted/40">
-                    <TableCell>
-                      <Link href={`/transactions/vouchers/${v.id}`} className="block">
-                        {new Date(v.date).toLocaleDateString("en-NP")}
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      <VoucherTypeBadge type={v.type} />
-                    </TableCell>
-                    <TableCell>
-                      <Link
-                        href={`/transactions/vouchers/${v.id}`}
-                        className="font-medium hover:underline"
-                      >
-                        {v.number}
-                      </Link>
-                    </TableCell>
-                    <TableCell className="max-w-xs truncate">
-                      {v.narration || "—"}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <AmountCell value={amount} />
-                    </TableCell>
-                  </TableRow>
+                  <VoucherTableRow
+                    key={v.id}
+                    id={v.id}
+                    date={v.date}
+                    type={v.type}
+                    number={v.number}
+                    narration={v.narration}
+                    amount={amount}
+                  />
                 );
               })}
             </TableBody>
