@@ -1,6 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { buildBalanceSheet } from "@/lib/accounting/balance-sheet";
 import { buildProfitLoss } from "@/lib/accounting/profit-loss";
 import { buildTrialBalance } from "@/lib/accounting/trial-balance";
 import { requireCompany } from "@/lib/session";
@@ -31,6 +32,14 @@ export async function getProfitLossReport(fromDateStr: string, toDateStr: string
   const fromDate = new Date(fromDateStr);
   const toDate = new Date(toDateStr);
   return buildProfitLoss(ledgers, fromDate, toDate);
+}
+
+export async function getBalanceSheetReport(asOfDateStr?: string) {
+  const { companyId } = await requireCompany();
+  const ledgers = await getLedgersWithMovements(companyId);
+  const asOfDate = asOfDateStr ? new Date(asOfDateStr) : new Date();
+  const company = await db.company.findUniqueOrThrow({ where: { id: companyId } });
+  return buildBalanceSheet(ledgers, company.booksBeginDate, asOfDate);
 }
 
 export async function getLedgerStatement(ledgerId: string) {

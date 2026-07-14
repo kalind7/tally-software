@@ -1,18 +1,22 @@
 import { getChartOfAccounts } from "@/lib/actions/ledger";
 import { requireCompany } from "@/lib/session";
-import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { ChartOfAccountsTable } from "@/components/masters/chart-of-accounts-table";
 
 export default async function GroupsPage() {
   await requireCompany();
   const groups = await getChartOfAccounts();
+
+  const rows = groups.map((group) => ({
+    id: group.id,
+    name: group.name,
+    nature: group.nature,
+    ledgers: group.ledgers.map((ledger) => ({
+      id: ledger.id,
+      name: ledger.name,
+      openingBalance: Number(ledger.openingBalance),
+      openingType: ledger.openingType,
+    })),
+  }));
 
   return (
     <div className="space-y-6">
@@ -23,54 +27,7 @@ export default async function GroupsPage() {
         </p>
       </div>
 
-      <div className="rounded-xl border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Group</TableHead>
-              <TableHead>Nature</TableHead>
-              <TableHead>Ledger</TableHead>
-              <TableHead className="text-right">Opening Balance</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {groups.flatMap((group) =>
-              group.ledgers.length > 0
-                ? group.ledgers.map((ledger, idx) => (
-                    <TableRow key={ledger.id}>
-                      <TableCell>
-                        {idx === 0 ? group.name : ""}
-                      </TableCell>
-                      <TableCell>
-                        {idx === 0 ? (
-                          <Badge variant="secondary">{group.nature}</Badge>
-                        ) : (
-                          ""
-                        )}
-                      </TableCell>
-                      <TableCell>{ledger.name}</TableCell>
-                      <TableCell className="text-right">
-                        {Number(ledger.openingBalance).toFixed(2)}{" "}
-                        {ledger.openingType}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                : [
-                    <TableRow key={group.id}>
-                      <TableCell>{group.name}</TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">{group.nature}</Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        No ledgers
-                      </TableCell>
-                      <TableCell />
-                    </TableRow>,
-                  ]
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <ChartOfAccountsTable groups={rows} />
     </div>
   );
 }

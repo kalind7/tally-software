@@ -15,7 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import type { LedgerGroup } from "@prisma/client";
+import type { SerializedLedgerGroup } from "@/lib/serialize";
 
 export function LedgerForm({
   groups,
@@ -23,7 +23,7 @@ export function LedgerForm({
   onSuccess,
   reloadOnSuccess = true,
 }: {
-  groups: LedgerGroup[];
+  groups: SerializedLedgerGroup[];
   trigger?: React.ReactNode;
   onSuccess?: (ledgerId: string) => void | Promise<void>;
   reloadOnSuccess?: boolean;

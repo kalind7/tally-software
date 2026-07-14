@@ -64,7 +64,7 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Button variant="outline" className="h-auto py-4" asChild>
           <Link href="/transactions/vouchers" className="flex flex-col items-center gap-2">
             <Receipt className="size-5" />
@@ -81,6 +81,12 @@ export default async function DashboardPage() {
           <Link href="/reports/profit-loss" className="flex flex-col items-center gap-2">
             <TrendingUp className="size-5" />
             Profit &amp; Loss
+          </Link>
+        </Button>
+        <Button variant="outline" className="h-auto py-4" asChild>
+          <Link href="/reports/balance-sheet" className="flex flex-col items-center gap-2">
+            <TrendingUp className="size-5" />
+            Balance Sheet
           </Link>
         </Button>
       </div>

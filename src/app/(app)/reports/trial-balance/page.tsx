@@ -5,6 +5,9 @@ import { formatAmount } from "@/lib/accounting/ledger-balance";
 import { PageHeader } from "@/components/layout/page-header";
 import { ReportDateFilter } from "@/components/forms/report-date-filter";
 import { PrintButton } from "@/components/reports/print-button";
+import { StatCard } from "@/components/ui/stat-card";
+import { AmountCell } from "@/components/ui/amount-cell";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Table,
   TableBody,
@@ -13,16 +16,21 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Scale } from "lucide-react";
 
 export default async function TrialBalancePage({
   searchParams,
 }: {
-  searchParams: Promise<{ asOf?: string }>;
+  searchParams: Promise<{ asOf?: string; zero?: string }>;
 }) {
   await requireCompany();
-  const { asOf } = await searchParams;
+  const { asOf, zero } = await searchParams;
   const today = new Date().toISOString().slice(0, 10);
   const report = await getTrialBalanceReport(asOf);
+  const showZero = zero === "1";
+  const rows = showZero ? report.rows : report.rows;
+
+  const diff = Math.abs(report.totalDr - report.totalCr);
 
   return (
     <div className="space-y-6 print:space-y-4" id="report-content">
@@ -40,58 +48,68 @@ export default async function TrialBalancePage({
         />
       </div>
 
-      <div className="rounded-xl border print:border-0">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Ledger</TableHead>
-              <TableHead>Group</TableHead>
-              <TableHead className="text-right">Debit (Dr)</TableHead>
-              <TableHead className="text-right">Credit (Cr)</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {report.rows.length === 0 ? (
+      <div className="grid gap-4 sm:grid-cols-3">
+        <StatCard label="Total Debit" value={formatAmount(report.totalDr)} />
+        <StatCard label="Total Credit" value={formatAmount(report.totalCr)} />
+        <StatCard
+          label="Difference"
+          value={formatAmount(diff)}
+          valueClassName={diff < 0.02 ? "text-success" : "text-destructive"}
+        />
+      </div>
+
+      {rows.length === 0 ? (
+        <EmptyState
+          icon={Scale}
+          title="No balances yet"
+          description="Save a voucher to see balances here."
+          actionLabel="New Voucher"
+          actionHref="/transactions/vouchers/new"
+        />
+      ) : (
+        <div className="rounded-xl border print:border-0">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={4} className="text-center text-muted-foreground">
-                  No balances to display.
-                </TableCell>
+                <TableHead>Ledger</TableHead>
+                <TableHead>Group</TableHead>
+                <TableHead className="text-right">Debit (Dr)</TableHead>
+                <TableHead className="text-right">Credit (Cr)</TableHead>
               </TableRow>
-            ) : (
-              <>
-                {report.rows.map((row) => (
-                  <TableRow key={row.ledgerId}>
-                    <TableCell>
-                      <Link
-                        href={`/reports/ledger/${row.ledgerId}`}
-                        className="font-medium hover:underline"
-                      >
-                        {row.ledgerName}
-                      </Link>
-                    </TableCell>
-                    <TableCell>{row.groupName}</TableCell>
-                    <TableCell className="text-right">
-                      {row.dr > 0 ? formatAmount(row.dr) : ""}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {row.cr > 0 ? formatAmount(row.cr) : ""}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                <TableRow className="font-semibold">
-                  <TableCell colSpan={2}>Total</TableCell>
+            </TableHeader>
+            <TableBody>
+              {rows.map((row) => (
+                <TableRow key={row.ledgerId} className="even:bg-muted/20">
+                  <TableCell>
+                    <Link
+                      href={`/reports/ledger/${row.ledgerId}`}
+                      className="font-medium hover:underline"
+                    >
+                      {row.ledgerName}
+                    </Link>
+                  </TableCell>
+                  <TableCell>{row.groupName}</TableCell>
                   <TableCell className="text-right">
-                    {formatAmount(report.totalDr)}
+                    <AmountCell value={row.dr} />
                   </TableCell>
                   <TableCell className="text-right">
-                    {formatAmount(report.totalCr)}
+                    <AmountCell value={row.cr} />
                   </TableCell>
                 </TableRow>
-              </>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              ))}
+              <TableRow className="font-semibold">
+                <TableCell colSpan={2}>Total</TableCell>
+                <TableCell className="text-right">
+                  <AmountCell value={report.totalDr} />
+                </TableCell>
+                <TableCell className="text-right">
+                  <AmountCell value={report.totalCr} />
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </div>
   );
 }

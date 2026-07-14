@@ -23,18 +23,51 @@ export type SerializedCompany = Omit<
   owner?: { id: string; name: string | null; email: string } | null;
 };
 
-export function serializeLedgerForClient(
-  ledger: Ledger & { group: LedgerGroup }
-): SerializedLedgerWithGroup {
+export type SerializedLedgerGroup = Omit<
+  LedgerGroup,
+  "createdAt" | "updatedAt"
+> & {
+  createdAt: string;
+  updatedAt: string;
+};
+
+export function serializeLedgerGroupForClient(
+  group: LedgerGroup
+): SerializedLedgerGroup {
   return {
-    ...ledger,
+    id: group.id,
+    companyId: group.companyId,
+    name: group.name,
+    parentId: group.parentId,
+    nature: group.nature,
+    isPrimary: group.isPrimary,
+    createdAt: group.createdAt.toISOString(),
+    updatedAt: group.updatedAt.toISOString(),
+  };
+}
+
+export function serializeLedgerForClient(
+  ledger: Ledger & { group: LedgerGroup; voucherLines?: unknown }
+): SerializedLedgerWithGroup {
+  const { group } = ledger;
+  return {
+    id: ledger.id,
+    companyId: ledger.companyId,
+    groupId: ledger.groupId,
+    name: ledger.name,
+    openingType: ledger.openingType,
     openingBalance: Number(ledger.openingBalance),
     createdAt: ledger.createdAt.toISOString(),
     updatedAt: ledger.updatedAt.toISOString(),
     group: {
-      ...ledger.group,
-      createdAt: ledger.group.createdAt.toISOString(),
-      updatedAt: ledger.group.updatedAt.toISOString(),
+      id: group.id,
+      companyId: group.companyId,
+      name: group.name,
+      parentId: group.parentId,
+      nature: group.nature,
+      isPrimary: group.isPrimary,
+      createdAt: group.createdAt.toISOString(),
+      updatedAt: group.updatedAt.toISOString(),
     },
   };
 }

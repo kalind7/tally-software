@@ -77,6 +77,59 @@ async function main() {
       : `FAIL: Expected 6 starter ledgers, got ${ledgerCount}`
   );
 
+  const cash = await prisma.ledger.findFirst({
+    where: { companyId: companyA.id, name: "Cash" },
+  });
+  const sales = await prisma.ledger.findFirst({
+    where: { companyId: companyA.id, name: "Sales" },
+  });
+  const vat = await prisma.ledger.findFirst({
+    where: { companyId: companyA.id, name: "VAT Payable" },
+  });
+
+  if (cash && sales && vat) {
+    const salesVoucher = await prisma.voucher.create({
+      data: {
+        companyId: companyA.id,
+        type: "Sales",
+        number: "SAL-TEST-0001",
+        date: new Date("2025-05-15"),
+        lines: {
+          create: [
+            { ledgerId: cash.id, amount: 1130, entryType: "Dr" },
+            { ledgerId: sales.id, amount: 1000, entryType: "Cr" },
+            { ledgerId: vat.id, amount: 130, entryType: "Cr" },
+          ],
+        },
+      },
+      include: { lines: true },
+    });
+
+    const drLine = salesVoucher.lines.find((l) => l.entryType === "Dr");
+    if (drLine) {
+      await prisma.billReference.create({
+        data: {
+          companyId: companyA.id,
+          ledgerId: cash.id,
+          voucherLineId: drLine.id,
+          billNo: "INV-TEST-1",
+          billDate: new Date("2025-05-15"),
+          amount: 1130,
+          refType: "New",
+        },
+      });
+    }
+
+    const billCount = await prisma.billReference.count({
+      where: { companyId: companyA.id, refType: "New" },
+    });
+    results.push(
+      billCount >= 1 ? "PASS: Sales voucher created New bill ref" : "FAIL: Bill ref missing"
+    );
+  } else {
+    results.push("FAIL: Starter ledgers missing for voucher test");
+  }
+
   await prisma.company.deleteMany({
     where: { id: { in: [companyA.id, companyB.id] } },
   });

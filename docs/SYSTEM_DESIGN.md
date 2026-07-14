@@ -198,8 +198,14 @@ Login
 
 ## 8. Future enhancements (not yet implemented)
 
-- VAT 13% auto-split on Sales/Purchase templates
 - Party master (Sundry Debtor/Creditor) quick-create with PAN
 - Nepali FY label (Bikram Sambat) display
-- Balance Sheet report
 - Multi-user per company (invite collaborators)
+
+## 9. Implemented enhancements
+
+- Balance Sheet report (`/reports/balance-sheet`)
+- Voucher edit and delete with bill settlement guards
+- Bill-wise Against / On Account references with outstanding tracking
+- Nepal VAT 13% auto-split on Sales/Purchase voucher entry
+- UI redesign Phases 2–4 (voucher type pills, balance bar, stat cards, sonner toasts)

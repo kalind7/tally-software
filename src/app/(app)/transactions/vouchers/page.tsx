@@ -2,20 +2,40 @@ import Link from "next/link";
 import { getVouchers } from "@/lib/actions/voucher";
 import { requireCompany } from "@/lib/session";
 import { PageHeader } from "@/components/layout/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
+import { VoucherTableRow } from "@/components/transactions/voucher-table-row";
 import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { Receipt } from "lucide-react";
+import type { VoucherType } from "@prisma/client";
 
-export default async function VouchersPage() {
+const VOUCHER_TYPES: VoucherType[] = [
+  "Sales",
+  "Purchase",
+  "Receipt",
+  "Payment",
+  "Journal",
+  "Contra",
+];
+
+export default async function VouchersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ type?: string }>;
+}) {
   await requireCompany();
+  const { type: typeFilter } = await searchParams;
   const vouchers = await getVouchers("desc");
+  const filtered =
+    typeFilter && VOUCHER_TYPES.includes(typeFilter as VoucherType)
+      ? vouchers.filter((v) => v.type === typeFilter)
+      : vouchers;
 
   return (
     <div className="space-y-6">
@@ -29,58 +49,63 @@ export default async function VouchersPage() {
         }
       />
 
-      <div className="rounded-xl border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Date</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Number</TableHead>
-              <TableHead>Narration</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {vouchers.length === 0 ? (
+      <div className="flex flex-wrap gap-2 print:hidden">
+        <Button variant={!typeFilter ? "default" : "outline"} size="sm" asChild>
+          <Link href="/transactions/vouchers">All</Link>
+        </Button>
+        {VOUCHER_TYPES.map((t) => (
+          <Button
+            key={t}
+            variant={typeFilter === t ? "default" : "outline"}
+            size="sm"
+            asChild
+          >
+            <Link href={`/transactions/vouchers?type=${t}`}>{t}</Link>
+          </Button>
+        ))}
+      </div>
+
+      {filtered.length === 0 ? (
+        <EmptyState
+          icon={Receipt}
+          title="No vouchers yet"
+          description="Post your first voucher to start bookkeeping."
+          actionLabel="New Voucher"
+          actionHref="/transactions/vouchers/new"
+        />
+      ) : (
+        <div className="rounded-xl border">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={5} className="text-center text-muted-foreground">
-                  No vouchers yet.
-                </TableCell>
+                <TableHead>Date</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Number</TableHead>
+                <TableHead>Narration</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
               </TableRow>
-            ) : (
-              vouchers.map((v) => {
+            </TableHeader>
+            <TableBody>
+              {filtered.map((v) => {
                 const amount = v.lines
                   .filter((l) => l.entryType === "Dr")
                   .reduce((s, l) => s + Number(l.amount), 0);
                 return (
-                  <TableRow key={v.id}>
-                    <TableCell>
-                      {new Date(v.date).toLocaleDateString("en-NP")}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">{v.type}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Link
-                        href={`/transactions/vouchers/${v.id}`}
-                        className="font-medium hover:underline"
-                      >
-                        {v.number}
-                      </Link>
-                    </TableCell>
-                    <TableCell className="max-w-xs truncate">
-                      {v.narration || "—"}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {amount.toFixed(2)}
-                    </TableCell>
-                  </TableRow>
+                  <VoucherTableRow
+                    key={v.id}
+                    id={v.id}
+                    date={v.date}
+                    type={v.type}
+                    number={v.number}
+                    narration={v.narration}
+                    amount={amount}
+                  />
                 );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              })}
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </div>
   );
 }

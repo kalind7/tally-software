@@ -1,0 +1,16 @@
+# Production app only — use native PostgreSQL on the host (see DEPLOY.md).
+# Never run bare `docker compose up` on the VPS; that starts dev Postgres on 5432.
+
+services:
+  tallyco:
+    build: .
+    container_name: tallyco
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      NODE_ENV: production
+      PORT: 3010
+      AUTH_TRUST_HOST: "true"
+      AUTH_URL: https://tallyco.kalindkoirala.com.np
+      AUTH_SECRET: "replace-me-openssl-rand-base64-32"
+      DATABASE_URL: "postgresql://tallyco_app:replace-me@127.0.0.1:5432/tallyco"
